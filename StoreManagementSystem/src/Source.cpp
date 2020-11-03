@@ -3,8 +3,7 @@
 #include <typeinfo>
 
 
-using namespace sqlite_orm;
-int main(int, char**) {
+int main() {
 
 
     ConsoleMenu* menu = new ConsoleMenu();

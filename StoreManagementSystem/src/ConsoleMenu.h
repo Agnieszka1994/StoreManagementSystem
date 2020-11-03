@@ -4,9 +4,9 @@
 #include "StorageMacro.h"
 
 struct User {
-	int id;
+	int id=0;
 	int typeId;
-	std::string login;
+	std::string login="";
 	std::string password;
 };
 
@@ -41,8 +41,9 @@ class ConsoleMenu
 			make_column("name", &UserType::name, default_value("user"))));
 	bool running;
 	int userTypeLogged;
+	int userIDLogged;
 	User _insertCustomer(std::string name);
-	Product _insertProduct(std::string name, float price, int quantity);
+	Product _insertProduct(std::string name, double price, int quantity);
 
 public:
 	ConsoleMenu();
@@ -51,7 +52,12 @@ public:
 	void showUser();
 	void showAdmin();
 	void logIn();
+	void logOut();
 	void createCustomerAccount();
+
+	void displayStock();
+	void addProduct();
+	void deleteProduct();
 	
 	
 };
