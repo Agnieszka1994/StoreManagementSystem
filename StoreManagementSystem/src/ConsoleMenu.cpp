@@ -12,8 +12,8 @@ ConsoleMenu::ConsoleMenu()
 {
 	_storage.sync_schema();
 	running = true;
-	userTypeLogged = 1;
-	userIDLogged = 0;
+	userTypeLogged = NULL;
+	userIDLogged = NULL;
 	User admin = { 0, 1, "ADMIN", "ADMIN" };
 	_storage.replace(admin);
 }
@@ -76,7 +76,7 @@ void ConsoleMenu::run()
 				system("pause");
 				break;
 			case 0:
-				exit(0);
+				logOut();
 				break;
 			default:
 				noOption();
@@ -101,7 +101,7 @@ void ConsoleMenu::run()
 				system("pause");
 				break;
 			case 0:
-				exit(0);
+				logOut();
 				break;
 			default:
 				noOption();
@@ -322,7 +322,8 @@ void ConsoleMenu::displayAllOrdersUser()
 	}
 	else {
 		auto ordersDetails = _storage.select(columns(&Order::id, &Product::name, &Product::id, &Order::quantity, &Product::price),
-			inner_join<Product>(on(c(&Product::id) == &Order::productId)));
+			inner_join<Product>(on(c(&Product::id) == &Order::productId)),
+			where(c(&Order::userId) == userIDLogged));
 		std::cout << std::setw(9) << std::left << "Order ID"
 			<< std::setw(15) << std::left << "PROD. NAME"
 			<< std::setw(11) << std::left << "PROD. ID"
