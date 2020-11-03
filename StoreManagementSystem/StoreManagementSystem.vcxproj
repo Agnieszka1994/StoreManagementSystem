@@ -164,11 +164,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\ConsoleMenu.cpp" />
-    <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Source.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ConsoleMenu.h" />
+    <ClInclude Include="src\InputHandler.h" />
     <ClInclude Include="src\PassGenerator.h" />
     <ClInclude Include="src\StorageMacro.h" />
   </ItemGroup>

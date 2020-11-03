@@ -1,6 +1,11 @@
 #include "ConsoleMenu.h"
 #include "PassGenerator.h"
+#include "InputHandler.h"
 #include <iomanip>
+
+void noOption() {
+	std::cout << "No such option!" << std::endl;
+}
 
 using namespace sqlite_orm;
 ConsoleMenu::ConsoleMenu()
@@ -14,13 +19,12 @@ ConsoleMenu::ConsoleMenu()
 }
 
 void ConsoleMenu::run()
-{
-	int choice;
+{	
 	while (running) {
 		while (userTypeLogged == NULL) {
 			system("cls");
 			this->showMain();
-			std::cin >> choice;
+			int choice = getChoice<int>();
 			switch (choice) {
 			case 1:
 				logIn();
@@ -33,15 +37,30 @@ void ConsoleMenu::run()
 			case 0:
 				exit(0);
 				break;
+			default:
+				noOption();
+				break;
 			}
 		}
 		while (userTypeLogged == 1) {
 			system("cls");
 			this->showAdmin();
-			std::cin >> choice;
+			int choice = getChoice<int>();
 			switch (choice) {
 			case 1:
 				addProduct();
+				system("pause");
+				break;
+			case 2:
+				changeProduct();
+				system("pause");
+				break;
+			case 3:
+				displayAllOrdersAdmin();
+				system("pause");
+				break;
+			case 4:
+				completeOrder();
 				system("pause");
 				break;
 			case 5:
@@ -52,8 +71,15 @@ void ConsoleMenu::run()
 				deleteProduct();
 				system("pause");
 				break;
+			case 7:
+				changeProductQty();
+				system("pause");
+				break;
 			case 0:
 				exit(0);
+				break;
+			default:
+				noOption();
 				break;
 			}
 			
@@ -61,7 +87,26 @@ void ConsoleMenu::run()
 		while (userTypeLogged == 2) {
 			system("cls");
 			this->showUser();
-			std::cin >> choice;
+			int choice = getChoice<int>();
+			switch (choice) {
+			case 1:
+				placeOrder();
+				system("pause");
+				break;
+			case 2:
+				system("pause");
+				break;
+			case 3:
+				displayAllOrdersUser();
+				system("pause");
+				break;
+			case 0:
+				exit(0);
+				break;
+			default:
+				noOption();
+				break;
+			}
 			
 		}
 	}
@@ -78,7 +123,7 @@ void ConsoleMenu::showUser()
 {
 	std::cout << "1. Place Order" << std::endl;
 	std::cout << "2. Check order" << std::endl;
-	std::cout << "3. Show all orders" << std::endl;
+	std::cout << "3. Display all orders" << std::endl;
 	std::cout << "4. Delete account" << std::endl; //check if active orders exist
 	std::cout << "0. Log out" << std::endl;
 }
@@ -91,17 +136,16 @@ void ConsoleMenu::showAdmin()
 	std::cout << "4. Complete order" << std::endl; 
 	std::cout << "5. Display stock" << std::endl;
 	std::cout << "6. Delete product from stock" << std::endl;
+	std::cout << "7. Add or subtract qty from stock" << std::endl;
 	std::cout << "0. Log out" << std::endl;
 }
 
 void ConsoleMenu::logIn()
 {
-	int id;
-	std::string password;
 	std::cout << "Please enter your ID:" << std::endl;
-	std::cin >> id;
+	int id = getChoice<int>();
 	std::cout << "Please enter your password:" << std::endl;
-	std::cin >> password;
+	std::string password = getChoice<std::string>();
 	if (auto user = _storage.get_pointer<User>(id)) {
 		if (user->password == password) {
 			userTypeLogged = user->typeId;
@@ -129,6 +173,12 @@ void ConsoleMenu::logOut()
 	return;
 }
 
+User ConsoleMenu::_insertCustomer(std::string name)
+{
+	User new_user = { -1, 2, name, random_string(8) };
+	new_user.id = _storage.insert(new_user); //  insert returns inserted id
+	return new_user;
+}
 
 Product ConsoleMenu::_insertProduct(std::string name, double price, int quantity)
 {
@@ -137,14 +187,19 @@ Product ConsoleMenu::_insertProduct(std::string name, double price, int quantity
 	return new_product;
 }
 
+Order ConsoleMenu::_insertOrder(int id, int userId, int productId, int quantity, std::string status)
+{
+	Order new_order = { -1, userId, productId, quantity, status};
+	new_order.id = _storage.insert(new_order); // insert returns inserted id
+	return new_order;
+}
+
 void ConsoleMenu::addProduct()
 {
-	std::string product_name;
-	double price;
 	std::cout << "Please enter product name:" << std::endl;
-	std::cin >> product_name;
+	std::string product_name = getChoice<std::string>();
 	std::cout << "Please enter product price:" << std::endl;
-	std::cin >> price;
+	double price = getChoice<double>();
 	if (!price or product_name == "") {
 		std::cout << "Missing product name or price!" << std::endl;
 		return;
@@ -162,19 +217,18 @@ void ConsoleMenu::addProduct()
 void ConsoleMenu::deleteProduct()
 {
 	displayStock();
-	int id;
 	std::cout << "Please enter product ID:" << std::endl;
-	std::cin >> id;
+	int id = getChoice<int>();
 	if (auto product = _storage.get_pointer<Product>(id)) {
-		char choice;
 		std::cout << "Are you sure to delete Product: " << product->name << " from stock? Y/N" << std::endl;
-		std::cin >> choice;
+		char choice = getChoice<char>();
 		if (choice == 'Y') {
 			_storage.remove<Product>(id);
 			std::cout << "Product: " << id << " " << product->name << " deleted from stock." << std::endl;
 			return;
 		}
 		else {
+			std::cout << "Product has NOT beed deleted." << id << std::endl;
 			return;
 		}
 	}
@@ -185,17 +239,49 @@ void ConsoleMenu::deleteProduct()
 	}
 }
 
-User ConsoleMenu::_insertCustomer(std::string name)
+void ConsoleMenu::changeProduct()
 {
-	User new_user = { -1, 2, name, random_string(8) };
-	new_user.id = _storage.insert(new_user); //  insert returns inserted id
-	return new_user;	
 }
+
+void ConsoleMenu::displayAllOrdersAdmin()
+{
+}
+
+void ConsoleMenu::completeOrder()
+{
+}
+
+void ConsoleMenu::changeProductQty()
+{
+	displayStock();
+	std::cout << "Please enter product ID:" << std::endl;
+	int id = getChoice<int>();
+	if (auto product = _storage.get_pointer<Product>(id)) {
+		std::cout << "Current qty: " << product->quantity << "; product: " << product->name << std::endl;
+		std::cout << "Enter New quantity: " << std::endl;
+		int quantity = getChoice<int>();
+		if (quantity > 0) {
+			product->quantity = quantity;
+			_storage.update(*product);
+			std::cout << "Quantity opdated: " << product->quantity << std::endl;
+			return;
+		}
+		else {
+			std::cout << "Wrong quantity!" << std::endl;
+			return;
+		}
+	}
+	else {
+		std::cout << "No product with id " << id << std::endl;
+		std::cout << "Please try again" << std::endl;
+		return;
+	}
+}
+
 void ConsoleMenu::createCustomerAccount()
 {
-	std::string user_name;
 	std::cout << "Please enter your name:" << std::endl;
-	std::cin >> user_name;
+	std::string user_name = getChoice<std::string>();
 	User new_user = _insertCustomer(user_name);
 	std::cout << "Account has been created!" << std::endl;
 	std::cout << "Your ID: " << new_user.id << std::endl;
@@ -203,13 +289,68 @@ void ConsoleMenu::createCustomerAccount()
 	std::cout << "Password: " << new_user.password << std::endl;
 }
 
+void ConsoleMenu::placeOrder()
+{
+	displayStock();
+	std::cout << "Please enter product ID:" << std::endl;
+	int id = getChoice<int>();
+	if (auto product = _storage.get_pointer<Product>(id)) {
+		std::cout << "Enter quantity: " << std::endl;
+		int quantity = getChoice<int>();
+		if (quantity <= product->quantity) {
+			Order new_order = _insertOrder(-1, userIDLogged, product->id, quantity, "new");
+			std::cout << "Order: " << id << " created." << std::endl;
+			return;
+		}
+		else {
+			std::cout << "Quantity insufficient!" << std::endl;
+			return;
+		}
+	}
+	else {
+		std::cout << "No product with id " << id << std::endl;
+		std::cout << "Please try again" << std::endl;
+		return;
+	}
+}
+
+void ConsoleMenu::displayAllOrdersUser()
+{
+	auto ordersByUserId = _storage.get_all<Order>(where(c(&Order::userId) == userIDLogged));
+	if (ordersByUserId.size() == 0) {
+		std::cout << "No orders found" << std::endl;
+	}
+	else {
+		auto ordersDetails = _storage.select(columns(&Order::id, &Product::name, &Product::id, &Order::quantity, &Product::price),
+			inner_join<Product>(on(c(&Product::id) == &Order::productId)));
+		std::cout << std::setw(9) << std::left << "Order ID"
+			<< std::setw(15) << std::left << "PROD. NAME"
+			<< std::setw(11) << std::left << "PROD. ID"
+			<< std::setw(11) << std::left << "ORDER QTY"
+			<< std::setw(11) << std::left << "UNIT PRICE"
+			<< std::setw(11) << std::right << "TOTAL PRICE"
+			<< std::endl;
+		for (auto& order : ordersDetails) {
+			std::cout << std::setw(9) << std::left << std::get<0>(order)
+				<< std::setw(15) << std::left << std::get<1>(order) 
+				<< std::setw(11) << std::left << std::get<2>(order)
+				<< std::setw(11) << std::left << std::get<3>(order)
+				<< std::setw(11) << std::left << std::fixed << std::setprecision(2)
+				<< std::get<4>(order)
+				<< std::setw(11) << std::left << std::fixed << std::setprecision(2) 
+				<< (double)std::get<3>(order) * (double)std::get<4>(order)
+				<< std::endl;
+		}
+	}
+}
+
 void ConsoleMenu::displayStock()
 {
 	auto products = _storage.get_all<Product>(order_by(&Product::id));
-	std::cout << products.size() << "products available in stock:" << std::endl;
+	std::cout << std::endl << products.size() << " products available in stock:" << std::endl << std::endl;
 	std::cout << std::setw(4) << std::left << "ID" 
 			<< std::setw(15) << std::left << "NAME"
-			<< std::setw(15) << std::left << "PRICE"
+			<< std::setw(10) << std::left << "PRICE"
 			<< std::setw(10) << std::right << "QUANTITY"
 			<< std::endl;
 	for (auto& product : products) {
@@ -217,7 +358,7 @@ void ConsoleMenu::displayStock()
 		//std::cout << _storage.dump(product) << std::endl;
 		std::cout << std::setw(4) << std::left << product.id 
 				<< std::setw(15) << std::left << product.name 
-				<< std::setw(15) << std::left << std::fixed << std::setprecision(2) << product.price
+				<< std::setw(10) << std::left << std::fixed << std::setprecision(2) << product.price
 				<< std::setw(10) << std::right << product.quantity 
 				<< std::endl;
 	}
