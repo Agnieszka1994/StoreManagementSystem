@@ -4,11 +4,10 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Source.cpp" />
     <ClCompile Include="src\ConsoleMenu.cpp" />
-    <ClCompile Include="src\DBLite.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ConsoleMenu.h" />
-    <ClInclude Include="src\DBLite.h" />
     <ClInclude Include="src\PassGenerator.h" />
+    <ClInclude Include="src\StorageMacro.h" />
   </ItemGroup>
 </Project>

@@ -163,15 +163,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\DBLite.cpp" />
     <ClCompile Include="src\ConsoleMenu.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Source.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\DBLite.h" />
     <ClInclude Include="src\ConsoleMenu.h" />
     <ClInclude Include="src\PassGenerator.h" />
+    <ClInclude Include="src\StorageMacro.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
