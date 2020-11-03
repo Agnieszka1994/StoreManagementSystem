@@ -245,6 +245,37 @@ void ConsoleMenu::changeProduct()
 
 void ConsoleMenu::displayAllOrdersAdmin()
 {
+	auto ordersByUserId = _storage.get_all<Order>(order_by(&Order::id));
+	if (ordersByUserId.size() == 0) {
+		std::cout << "No orders found" << std::endl;
+	}
+	else {
+		auto ordersDetails = _storage.select(columns(&Order::id, &User::id, &User::login, &Product::name, &Product::id, &Order::quantity, &Product::price),
+			inner_join<Product>(on(c(&Product::id) == &Order::productId)),
+			inner_join<User>(on(c(&User::id) == &Order::userId)));
+		std::cout << std::setw(9) << std::left << "Order ID"
+			<< std::setw(8) << std::left << "USER ID"
+			<< std::setw(15) << std::left << "USER NAME"
+			<< std::setw(15) << std::left << "PROD. NAME"
+			<< std::setw(11) << std::left << "PROD. ID"
+			<< std::setw(11) << std::left << "ORDER QTY"
+			<< std::setw(11) << std::left << "UNIT PRICE"
+			<< std::setw(11) << std::right << "TOTAL PRICE"
+			<< std::endl;
+		for (auto& order : ordersDetails) {
+			std::cout << std::setw(9) << std::left << std::get<0>(order)
+				<< std::setw(8) << std::left << std::get<1>(order)
+				<< std::setw(15) << std::left << std::get<2>(order)
+				<< std::setw(15) << std::left << std::get<3>(order)
+				<< std::setw(11) << std::left << std::get<4>(order)
+				<< std::setw(11) << std::left << std::get<5>(order)
+				<< std::setw(11) << std::left << std::fixed << std::setprecision(2)
+				<< std::get<6>(order)
+				<< std::setw(11) << std::left << std::fixed << std::setprecision(2)
+				<< (double)std::get<5>(order) * (double)std::get<6>(order)
+				<< std::endl;
+		}
+	}
 }
 
 void ConsoleMenu::completeOrder()
