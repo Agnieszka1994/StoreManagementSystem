@@ -31,29 +31,29 @@ struct Order {
 	std::string status;
 };
 
-using namespace sqlite_orm;
+
 class ConsoleMenu
 {
-	StorageType _storage = make_storage("test_db.sqlite",
-		make_table("users",
-			make_column("id", &User::id, autoincrement(), primary_key()),
-			make_column("type_id", &User::typeId),
-			make_column("login", &User::login),
-			make_column("password", &User::password)),
-		make_table("products",
-			make_column("id", &Product::id, autoincrement(), primary_key()),
-			make_column("name", &Product::name),
-			make_column("price", &Product::price),
-			make_column("quantity", &Product::quantity)),
-		make_table("orders",
-			make_column("id", &Order::id, autoincrement(), primary_key()),
-			make_column("userId", &Order::userId),
-			make_column("productId", &Order::productId),
-			make_column("quantity", &Order::quantity),
-			make_column("status", &Order::status)),
-		make_table("user_types",
-			make_column("id", &UserType::id, autoincrement(), primary_key()),
-			make_column("name", &UserType::name, default_value("user"))));
+	StorageType _storage = sqlite_orm::make_storage("test_db.sqlite",
+		sqlite_orm::make_table("users",
+			sqlite_orm::make_column("id", &User::id, sqlite_orm::autoincrement(), sqlite_orm::primary_key()),
+			sqlite_orm::make_column("type_id", &User::typeId),
+			sqlite_orm::make_column("login", &User::login),
+			sqlite_orm::make_column("password", &User::password)),
+		sqlite_orm::make_table("products",
+			sqlite_orm::make_column("id", &Product::id, sqlite_orm::autoincrement(), sqlite_orm::primary_key()),
+			sqlite_orm::make_column("name", &Product::name),
+			sqlite_orm::make_column("price", &Product::price),
+			sqlite_orm::make_column("quantity", &Product::quantity)),
+		sqlite_orm::make_table("orders",
+			sqlite_orm::make_column("id", &Order::id, sqlite_orm::autoincrement(), sqlite_orm::primary_key()),
+			sqlite_orm::make_column("userId", &Order::userId),
+			sqlite_orm::make_column("productId", &Order::productId),
+			sqlite_orm::make_column("quantity", &Order::quantity),
+			sqlite_orm::make_column("status", &Order::status)),
+		sqlite_orm::make_table("user_types",
+			sqlite_orm::make_column("id", &UserType::id, sqlite_orm::autoincrement(), sqlite_orm::primary_key()),
+			sqlite_orm::make_column("name", &UserType::name, sqlite_orm::default_value("user"))));
 
 	bool running;
 	int userTypeLogged;
