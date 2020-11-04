@@ -1,9 +1,13 @@
 #include "ConsoleMenu.h"
 #include "PassGenerator.h"
 #include "InputHandler.h"
-#include <iomanip>
 
-void noOption() {
+void idNotFoundMsg(int id) {
+	std::cout << "ID " << id << " not found!" << std::endl;
+	std::cout << "Please try again." << std::endl;
+}
+
+void noOptionMsg() {
 	std::cout << "No such option!" << std::endl;
 }
 
@@ -38,7 +42,8 @@ void ConsoleMenu::run()
 				exit(0);
 				break;
 			default:
-				noOption();
+				noOptionMsg();
+				system("pause");
 				break;
 			}
 		}
@@ -52,7 +57,7 @@ void ConsoleMenu::run()
 				system("pause");
 				break;
 			case 2:
-				changeProduct();
+				cancelOrder();
 				system("pause");
 				break;
 			case 3:
@@ -75,11 +80,17 @@ void ConsoleMenu::run()
 				changeProductQty();
 				system("pause");
 				break;
+			case 8:
+				displayUsersStatistic();
+				system("pause");
+				break;		
 			case 0:
 				logOut();
+				system("pause");
 				break;
 			default:
-				noOption();
+				noOptionMsg();
+				system("pause");
 				break;
 			}
 			
@@ -94,17 +105,24 @@ void ConsoleMenu::run()
 				system("pause");
 				break;
 			case 2:
+				checkOrderById();
 				system("pause");
 				break;
 			case 3:
 				displayAllOrdersUser();
 				system("pause");
 				break;
+			case 4:
+				deleteUserAccount();
+				system("pause");
+				break;
 			case 0:
 				logOut();
+				system("pause");
 				break;
 			default:
-				noOption();
+				noOptionMsg();
+				system("pause");
 				break;
 			}
 			
@@ -124,20 +142,66 @@ void ConsoleMenu::showUser()
 	std::cout << "1. Place Order" << std::endl;
 	std::cout << "2. Check order" << std::endl;
 	std::cout << "3. Display all orders" << std::endl;
-	std::cout << "4. Delete account" << std::endl; //check if active orders exist
+	std::cout << "4. Delete account" << std::endl;
 	std::cout << "0. Log out" << std::endl;
 }
 
 void ConsoleMenu::showAdmin()
 {
 	std::cout << "1. Add products" << std::endl;
-	std::cout << "2. Change product" << std::endl;
+	std::cout << "2. Cancel order" << std::endl;
 	std::cout << "3. Display all orders" << std::endl;
 	std::cout << "4. Complete order" << std::endl; 
 	std::cout << "5. Display stock" << std::endl;
 	std::cout << "6. Delete product from stock" << std::endl;
 	std::cout << "7. Add or subtract qty from stock" << std::endl;
+	std::cout << "8. Display Users Statistics" << std::endl;
 	std::cout << "0. Log out" << std::endl;
+}
+
+void ConsoleMenu::_displayUserHeader()
+{
+	std::cout << std::setw(9) << std::left << "Order ID"
+		<< std::setw(15) << std::left << "PROD. NAME"
+		<< std::setw(11) << std::left << "PROD. ID"
+		<< std::setw(11) << std::left << "ORDER QTY"
+		<< std::setw(11) << std::left << "UNIT PRICE"
+		<< std::setw(11) << std::left << "TOTAL PRICE"
+		<< std::setw(11) << std::right << "STATUS"
+		<< std::endl;
+}
+
+void ConsoleMenu::_displayAdminHeader() 
+{
+	std::cout << std::setw(9) << std::left << "Order ID"
+		<< std::setw(8) << std::left << "USER ID"
+		<< std::setw(15) << std::left << "USER NAME"
+		<< std::setw(15) << std::left << "PROD. NAME"
+		<< std::setw(11) << std::left << "PROD. ID"
+		<< std::setw(11) << std::left << "ORDER QTY"
+		<< std::setw(11) << std::left << "UNIT PRICE"
+		<< std::setw(11) << std::left << "TOTAL PRICE"
+		<< std::setw(11) << std::right << "STATUS"
+		<< std::endl;
+}
+
+void ConsoleMenu::_displayStockHeader() 
+{
+	std::cout << std::setw(4) << std::left << "ID"
+		<< std::setw(15) << std::left << "NAME"
+		<< std::setw(10) << std::left << "PRICE"
+		<< std::setw(10) << std::right << "QUANTITY"
+		<< std::endl;
+}
+
+void ConsoleMenu::_displayUserStatsHeader()
+{
+	std::cout << std::setw(4) << std::left << "ID"
+		<< std::setw(15) << std::left << "NAME"
+		<< std::setw(12) << std::left << "TOTAL ORDERS"
+		<< std::setw(12) << std::left << "TOTAL QTY"
+		<< std::setw(13) << std::right << "TOTAL PRICE"
+		<< std::endl;
 }
 
 void ConsoleMenu::logIn()
@@ -159,8 +223,7 @@ void ConsoleMenu::logIn()
 		}	
 	}
 	else {
-		std::cout << "No user with id " << id << std::endl;
-		std::cout << "Please try again" << std::endl;
+		idNotFoundMsg(id);
 		return;
 	}
 }
@@ -222,7 +285,7 @@ void ConsoleMenu::deleteProduct()
 	if (auto product = _storage.get_pointer<Product>(id)) {
 		std::cout << "Are you sure to delete Product: " << product->name << " from stock? Y/N" << std::endl;
 		char choice = getChoice<char>();
-		if (choice == 'Y') {
+		if (choice == 'Y' or choice == 'y') {
 			_storage.remove<Product>(id);
 			std::cout << "Product: " << id << " " << product->name << " deleted from stock." << std::endl;
 			return;
@@ -233,14 +296,58 @@ void ConsoleMenu::deleteProduct()
 		}
 	}
 	else {
-		std::cout << "No product with id " << id << std::endl;
-		std::cout << "Please try again" << std::endl;
+		idNotFoundMsg(id);
 		return;
 	}
 }
 
-void ConsoleMenu::changeProduct()
+void ConsoleMenu::cancelOrder()
 {
+	displayActiveOrdersAdmin();
+	std::cout << "Please enter order ID:" << std::endl;
+	int id = getChoice<int>();
+	if (auto order = _storage.get_pointer<Order>(id)) {
+		std::cout << "Order from user: " << order->userId << std::endl;
+		std::cout << "Are you sure to cancel Order nr: " << order->id << "?  Y/N" << std::endl;
+		char choice = getChoice<char>();
+		if (choice == 'Y' or choice == 'y') {
+			order->status = "canceled";
+			_storage.update(*order);
+			std::cout << "Order: " << id << " " << order->id << " has been canceled." << std::endl;
+			return;
+		}
+		else {
+			std::cout << "Order not canceled." << id << std::endl;
+			return;
+		}
+	}
+	else {
+		idNotFoundMsg(id);
+		return;
+	}
+}
+
+void ConsoleMenu::deleteUserAccount()
+{
+	auto ordersByUserId = _storage.get_all<Order>(
+		where(c(&Order::userId) == userIDLogged and c(&Order::status) == "new"));
+	if (ordersByUserId.size() == 0) {
+		std::cout << "Are you sure to delete Your account? Y/N" << std::endl;
+		char choice = getChoice<char>();
+		if (choice == 'Y' or choice == 'y') {
+			_storage.remove<User>(userIDLogged);
+			logOut();
+			std::cout << "Your account has been deleted." << std::endl;
+			return;
+		}
+		else {
+			return;
+		}
+	}
+	else {
+		std::cout << "You have active orders! Impossible to delete account?" << std::endl;
+		return;
+	}
 }
 
 void ConsoleMenu::displayAllOrdersAdmin()
@@ -250,36 +357,73 @@ void ConsoleMenu::displayAllOrdersAdmin()
 		std::cout << "No orders found" << std::endl;
 	}
 	else {
-		auto ordersDetails = _storage.select(columns(&Order::id, &User::id, &User::login, &Product::name, &Product::id, &Order::quantity, &Product::price),
+		auto ordersDetails = _storage.select(columns(&Order::id, &User::id, &User::login, 
+			&Product::name, &Product::id, &Order::quantity, &Product::price, &Order::status),
 			inner_join<Product>(on(c(&Product::id) == &Order::productId)),
 			inner_join<User>(on(c(&User::id) == &Order::userId)));
-		std::cout << std::setw(9) << std::left << "Order ID"
-			<< std::setw(8) << std::left << "USER ID"
-			<< std::setw(15) << std::left << "USER NAME"
-			<< std::setw(15) << std::left << "PROD. NAME"
-			<< std::setw(11) << std::left << "PROD. ID"
-			<< std::setw(11) << std::left << "ORDER QTY"
-			<< std::setw(11) << std::left << "UNIT PRICE"
-			<< std::setw(11) << std::right << "TOTAL PRICE"
-			<< std::endl;
-		for (auto& order : ordersDetails) {
-			std::cout << std::setw(9) << std::left << std::get<0>(order)
-				<< std::setw(8) << std::left << std::get<1>(order)
-				<< std::setw(15) << std::left << std::get<2>(order)
-				<< std::setw(15) << std::left << std::get<3>(order)
-				<< std::setw(11) << std::left << std::get<4>(order)
-				<< std::setw(11) << std::left << std::get<5>(order)
-				<< std::setw(11) << std::left << std::fixed << std::setprecision(2)
-				<< std::get<6>(order)
-				<< std::setw(11) << std::left << std::fixed << std::setprecision(2)
-				<< (double)std::get<5>(order) * (double)std::get<6>(order)
-				<< std::endl;
-		}
+		_displayAdminHeader();
+		displayOrdersAdmin(ordersDetails);
+	}
+}
+
+void ConsoleMenu::displayActiveOrdersAdmin()
+{
+	auto ordersByUserId = _storage.get_all<Order>(order_by(&Order::id));
+	if (ordersByUserId.size() == 0) {
+		std::cout << "No orders found" << std::endl;
+	}
+	else {
+		auto ordersDetails = _storage.select(columns(&Order::id, &User::id, &User::login,
+			&Product::name, &Product::id, &Order::quantity, &Product::price, &Order::status),
+			inner_join<Product>(on(c(&Product::id) == &Order::productId)),
+			inner_join<User>(on(c(&User::id) == &Order::userId)),
+			where(c(&Order::status) == "new"));
+		_displayAdminHeader();
+		displayOrdersAdmin(ordersDetails);
 	}
 }
 
 void ConsoleMenu::completeOrder()
 {
+	displayActiveOrdersAdmin();
+	std::cout << "Please enter order ID:" << std::endl;
+	int id = getChoice<int>();
+	if (auto order = _storage.get_pointer<Order>(id)) {
+		if (auto product = _storage.get_pointer<Product>(order->productId)) {
+			if (product->quantity >= order->quantity) {
+				product->quantity -= order->quantity;
+				order->status = "completed";
+				std::cout << "Order ID: " << order->id << " is ready" << std::endl;
+				std::cout << "Order quantity:         " << order->quantity << std::endl;
+				std::cout << "Qty remaining in stock: " << product->quantity << std::endl;
+				std::cout << "Please confirm completion. Y/N" << std::endl;
+				char choice = getChoice<char>();
+				if (choice == 'Y' or choice == 'y') {
+					_storage.update(*product);
+					_storage.update(*order);
+					std::cout << "Order completed successfully!" << std::endl;
+					return;
+				}
+				else {
+					std::cout << "Order NOT completed" << id << std::endl;
+					return;
+				}
+
+			}
+			else {
+				std::cout << "Quantity insufficient: " << product->id << " "
+					<< product->name << std::endl;
+			}
+		}
+		else {
+			std::cout << "No product available in stock: " << product->id << " " 
+				<< product->name << std::endl;
+		}
+	}
+	else {
+		idNotFoundMsg(id);
+		return;
+	}
 }
 
 void ConsoleMenu::changeProductQty()
@@ -303,9 +447,31 @@ void ConsoleMenu::changeProductQty()
 		}
 	}
 	else {
-		std::cout << "No product with id " << id << std::endl;
-		std::cout << "Please try again" << std::endl;
+		idNotFoundMsg(id);
 		return;
+	}
+}
+
+void ConsoleMenu::displayStock()
+{
+	auto products = _storage.get_all<Product>(order_by(&Product::id));
+	std::cout << std::endl << products.size() << " products available in stock:" << std::endl << std::endl;
+	_displayStockHeader();
+	displayProducts(products);
+}
+
+void ConsoleMenu::displayUsersStatistic()
+{
+	auto users = _storage.select(columns(&User::id, &User::login),
+			inner_join<Order>(on(c(&Order::userId) == &User::id)), 
+			where(c(&Order::status) == "new"),
+			group_by(&User::login));
+	for (auto& user : users) {
+		auto countOrders = _storage.count(&Order::id, where(c(&Order::userId) == get<0>(user) and c(&Order::status) == "new"));
+		std::cout << get<1>(user) << " - total active orders: " << countOrders << std::endl;		
+	}
+	if (users.size() == 0) {
+		std::cout << "No users with open orders!" << std::endl;
 	}
 }
 
@@ -339,10 +505,25 @@ void ConsoleMenu::placeOrder()
 		}
 	}
 	else {
-		std::cout << "No product with id " << id << std::endl;
-		std::cout << "Please try again" << std::endl;
+		idNotFoundMsg(id);
 		return;
 	}
+}
+
+void ConsoleMenu::checkOrderById()
+{
+	std::cout << "Please enter order ID:" << std::endl;
+	int id = getChoice<int>();
+	if (auto order = _storage.get_pointer<Order>(id)) {
+		std::cout << "Order: " << order->userId << std::endl;
+		std::cout << "Status: " << order->status << std::endl;
+		return;
+	}
+	else {
+		idNotFoundMsg(id);
+		return;
+	}
+
 }
 
 void ConsoleMenu::displayAllOrdersUser()
@@ -352,48 +533,12 @@ void ConsoleMenu::displayAllOrdersUser()
 		std::cout << "No orders found" << std::endl;
 	}
 	else {
-		auto ordersDetails = _storage.select(columns(&Order::id, &Product::name, &Product::id, &Order::quantity, &Product::price),
+		auto ordersDetails = _storage.select(columns(&Order::id, &Product::name, 
+			&Product::id, &Order::quantity, &Product::price, &Order::status),
 			inner_join<Product>(on(c(&Product::id) == &Order::productId)),
 			where(c(&Order::userId) == userIDLogged));
-		std::cout << std::setw(9) << std::left << "Order ID"
-			<< std::setw(15) << std::left << "PROD. NAME"
-			<< std::setw(11) << std::left << "PROD. ID"
-			<< std::setw(11) << std::left << "ORDER QTY"
-			<< std::setw(11) << std::left << "UNIT PRICE"
-			<< std::setw(11) << std::right << "TOTAL PRICE"
-			<< std::endl;
-		for (auto& order : ordersDetails) {
-			std::cout << std::setw(9) << std::left << std::get<0>(order)
-				<< std::setw(15) << std::left << std::get<1>(order) 
-				<< std::setw(11) << std::left << std::get<2>(order)
-				<< std::setw(11) << std::left << std::get<3>(order)
-				<< std::setw(11) << std::left << std::fixed << std::setprecision(2)
-				<< std::get<4>(order)
-				<< std::setw(11) << std::left << std::fixed << std::setprecision(2) 
-				<< (double)std::get<3>(order) * (double)std::get<4>(order)
-				<< std::endl;
-		}
+		_displayUserHeader();
+		displayOrdersUser(ordersDetails);
 	}
 }
-
-void ConsoleMenu::displayStock()
-{
-	auto products = _storage.get_all<Product>(order_by(&Product::id));
-	std::cout << std::endl << products.size() << " products available in stock:" << std::endl << std::endl;
-	std::cout << std::setw(4) << std::left << "ID" 
-			<< std::setw(15) << std::left << "NAME"
-			<< std::setw(10) << std::left << "PRICE"
-			<< std::setw(10) << std::right << "QUANTITY"
-			<< std::endl;
-	for (auto& product : products) {
-		
-		//std::cout << _storage.dump(product) << std::endl;
-		std::cout << std::setw(4) << std::left << product.id 
-				<< std::setw(15) << std::left << product.name 
-				<< std::setw(10) << std::left << std::fixed << std::setprecision(2) << product.price
-				<< std::setw(10) << std::right << product.quantity 
-				<< std::endl;
-	}
-}
-
 
